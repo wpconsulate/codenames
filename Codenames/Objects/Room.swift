@@ -108,4 +108,8 @@ class Room: NSObject, NSCoding {
             return false
         }
     }
+    
+    func clearPlayers() {
+        self.players.removeAll()
+    }
 }

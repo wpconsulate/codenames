@@ -21,6 +21,10 @@ class PregameRoomViewController: UIViewController, UITableViewDelegate, UITableV
     @IBOutlet weak var roomNameLabel: UILabel!
     @IBOutlet weak var startGame: CodenamesButton!
     
+    @IBAction func onBackButtonPressed(sender: AnyObject) {
+        self.leaveRoom(reason: nil)
+    }
+    
     @IBAction func onStartGame(sender: AnyObject) {
         if self.room.canStartGame() {
             // Go to cluegiver decision and game room
@@ -92,17 +96,36 @@ class PregameRoomViewController: UIViewController, UITableViewDelegate, UITableV
         self.multipeerManager.broadcastData(data)
     }
     
-    private func returnToLobby(reason reason: String) {
-        let alertController = UIAlertController(title: "Returning To Lobby", message: reason, preferredStyle: .Alert)
-        let confirmAction = UIAlertAction(title: "OK", style: .Default, handler: { (action: UIAlertAction) in
-            
-            dispatch_async(dispatch_get_main_queue(), {
-                self.performSegueWithIdentifier("lobby-room", sender: self)
-            })
-            
+    private func performSegueToLobby() {
+        dispatch_async(dispatch_get_main_queue(), {
+            self.performSegueWithIdentifier("lobby-room", sender: self)
         })
-        alertController.addAction(confirmAction)
-        self.presentViewController(alertController, animated: true, completion: nil)
+    }
+    
+    private func performSegueToMainMenu() {
+        self.multipeerManager.terminate()
+        self.player.resetPlayer()
+        self.room.clearPlayers()
+        dispatch_async(dispatch_get_main_queue(), {
+            self.performSegueWithIdentifier("main-menu", sender: self)
+        })
+    }
+    
+    private func leaveRoom(reason reason: String?) {
+        if reason == nil {
+            if self.player.isHost() {
+                self.performSegueToMainMenu()
+            } else {
+                self.performSegueToLobby()
+            }
+        } else {
+            let alertController = UIAlertController(title: "Returning To Lobby", message: reason, preferredStyle: .Alert)
+            let confirmAction = UIAlertAction(title: "OK", style: .Default, handler: { (action: UIAlertAction) in
+                self.performSegueToLobby()
+            })
+            alertController.addAction(confirmAction)
+            self.presentViewController(alertController, animated: true, completion: nil)
+        }
     }
     
     // MARK: Segue
@@ -118,6 +141,11 @@ class PregameRoomViewController: UIViewController, UITableViewDelegate, UITableV
                 lobbyRoomViewController.lobby = Lobby()
                 lobbyRoomViewController.room = Room()
                 lobbyRoomViewController.multipeerManager = self.multipeerManager
+            }
+        }
+        else if segue.identifier == "main-menu" {
+            if let mainMenuViewController = segue.destinationViewController as? MainMenuViewController {
+                
             }
         }
     }
@@ -190,10 +218,10 @@ class PregameRoomViewController: UIViewController, UITableViewDelegate, UITableV
             
             // Room has been terminated or local player has been removed from room
             if self.room.getNumberOfPlayers() == 0 {
-                self.returnToLobby(reason: self.hostDisconnectedString)
+                self.leaveRoom(reason: self.hostDisconnectedString)
             }
             else if !self.room.playerWithUUIDInRoom(self.player.getPlayerUUID()) {
-                self.returnToLobby(reason: self.removedFromRoomString)
+                self.leaveRoom(reason: self.removedFromRoomString)
             }
         }
         else if let connectedPeers = NSKeyedUnarchiver.unarchiveObjectWithData(data) as? [MCPeerID: String] {
@@ -209,7 +237,7 @@ class PregameRoomViewController: UIViewController, UITableViewDelegate, UITableV
                 // Room has been terminated if host player is disconnected
                 if player.isHost() {
                     self.room.removeAllPlayers()
-                    self.returnToLobby(reason: self.hostDisconnectedString)
+                    self.leaveRoom(reason: self.hostDisconnectedString)
                     return
                 }
             }

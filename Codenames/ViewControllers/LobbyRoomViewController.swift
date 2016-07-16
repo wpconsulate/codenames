@@ -13,6 +13,10 @@ class LobbyRoomViewController: UIViewController, UITableViewDelegate, UITableVie
     
     @IBOutlet weak var tableView: UITableView!
     
+    @IBAction func onBackButtonPressed(sender: AnyObject) {
+        self.returnToMainMenu()
+    }
+    
     // MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,6 +39,14 @@ class LobbyRoomViewController: UIViewController, UITableViewDelegate, UITableVie
     private func refreshView() {
         dispatch_async(dispatch_get_main_queue(), {
             self.tableView.reloadData()
+        })
+    }
+    
+    private func returnToMainMenu() {
+        self.multipeerManager.terminate()
+        self.player.resetPlayer()
+        dispatch_async(dispatch_get_main_queue(), {
+            self.performSegueWithIdentifier("main-menu", sender: self)
         })
     }
     

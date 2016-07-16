@@ -69,8 +69,8 @@ class Player: NSObject, NSCoding {
         self.clueGiver = true
     }
     
-    func setHost() {
-        self.host = true
+    func setIsHost(isHost: Bool) {
+        self.host = isHost
     }
     
     func isClueGiver() -> Bool {
@@ -79,6 +79,13 @@ class Player: NSObject, NSCoding {
     
     func isHost() -> Bool {
         return self.host
+    }
+    
+    func resetPlayer() {
+        self.name = "Nameless"
+        self.team = Team.Red
+        self.clueGiver = false
+        self.host = false
     }
 }
 

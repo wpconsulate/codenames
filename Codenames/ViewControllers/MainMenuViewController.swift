@@ -18,4 +18,3 @@ class MainMenuViewController: UIViewController {
         performSegueWithIdentifier("join-game", sender: self)
     }
 }
-
